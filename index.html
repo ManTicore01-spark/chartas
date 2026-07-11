@@ -2,88 +2,84 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>RPG Karakter Motoru - Profesyonel</title>
+    <title>RPG Karakter Motoru - Full</title>
     <style>
-        body { background: #121212; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        canvas { width: 300px; height: 300px; border-radius: 50%; box-shadow: 0 0 20px rgba(0,0,0,0.5); transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1); }
-        .dev-panel { margin-top: 20px; background: #222; padding: 15px; width: 300px; border-radius: 8px; }
+        body { background-color: #121212; color: #eee; font-family: 'Courier New', monospace; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 500px; text-align: center; }
+        canvas { width: 300px; height: 300px; border-radius: 50%; border: 3px solid #ffcc00; margin: 20px 0; transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1); }
+        button { padding: 10px 20px; cursor: pointer; background: #ffcc00; border: none; font-weight: bold; }
+        .dev-panel { margin-top: 20px; border: 1px solid #00ffcc; padding: 10px; width: 100%; text-align: left; }
+        textarea { width: 100%; height: 150px; margin-top: 10px; background: #222; color: #fff; }
     </style>
 </head>
 <body>
 
-<h2 id="status">Hazırlanıyor...</h2>
-<canvas id="wheelCanvas" width="500" height="500"></canvas>
-<button onclick="spin()">ÇARKI ÇEVİR</button>
+<div class="container">
+    <h2 id="status">Hazırlanıyor...</h2>
+    <canvas id="wheelCanvas" width="500" height="500"></canvas>
+    <button id="spinBtn" onclick="spin()">Çevir</button>
 
-<div class="dev-panel">
-    <select id="catSelect"><option value="mitolojiler">Mitoloji</option><option value="yas">Yaş</option><option value="uzmanlik">Uzmanlık</option></select>
-    <input type="text" id="itemName" placeholder="İsim">
-    <input type="number" id="itemWeight" placeholder="Oran (1-100)" value="10">
-    <button onclick="addItem()">Ekle</button>
+    <div class="dev-panel">
+        <h4 onclick="document.getElementById('devContent').style.display='block'">⚙️ Geliştirici Paneli (Tıkla)</h4>
+        <div id="devContent" style="display:none;">
+            <select id="catSelect">
+                <option value="mitolojiler">Mitoloji</option>
+                <option value="yas">Yaş Kategorileri</option>
+                <option value="uzmanlik">Uzmanlık</option>
+            </select>
+            <input type="text" id="itemName" placeholder="İsim">
+            <button onclick="addItem()">Ekle</button>
+        </div>
+    </div>
+    <textarea id="log" readonly></textarea>
 </div>
 
 <script>
+    // Veritabanı
     let DB = JSON.parse(localStorage.getItem("rpgDB")) || {
-        mitolojiler: [{name: "Yunan", weight: 50}, {name: "İskandinav", weight: 50}],
-        yas: [{name: "Çocuk", weight: 30}, {name: "Genç", weight: 40}, {name: "Yaşlı", weight: 30}],
-        uzmanlik: [{name: "Acemi", weight: 50}, {name: "Usta", weight: 50}]
+        mitolojiler: [{name: "Yunan", weight: 10}, {name: "İskandinav", weight: 10}],
+        yas: [{name: "Çocukluk", weight: 10}, {name: "Yetişkin", weight: 10}],
+        uzmanlik: [{name: "Acemi", weight: 10}, {name: "Usta", weight: 10}]
     };
 
     let step = 0;
     const steps = ["mitolojiler", "yas", "uzmanlik"];
-    let rotation = 0;
-
-    // Rastgele ana renk seçici
-    function getRandomColor() {
-        const r = Math.floor(Math.random() * 150);
-        const g = Math.floor(Math.random() * 150);
-        const b = Math.floor(Math.random() * 150);
-        return {r, g, b};
-    }
+    let currentRotation = 0;
 
     function draw() {
         const canvas = document.getElementById("wheelCanvas");
         const ctx = canvas.getContext("2d");
         const options = DB[steps[step]];
-        const baseColor = getRandomColor();
-        const totalWeight = options.reduce((sum, opt) => sum + opt.weight, 0);
+        ctx.clearRect(0,0,500,500);
         
-        let startAngle = 0;
-
-        ctx.clearRect(0, 0, 500, 500);
-
         options.forEach((opt, i) => {
-            let sliceAngle = (opt.weight / totalWeight) * 2 * Math.PI;
-            
-            // Renk tonlama: Seçenek ilerledikçe açılıyor (ton + i*30)
-            ctx.fillStyle = `rgb(${baseColor.r + i*40}, ${baseColor.g + i*40}, ${baseColor.b + i*40})`;
-            
+            let angle = (2 * Math.PI) / options.length;
             ctx.beginPath();
             ctx.moveTo(250, 250);
-            ctx.arc(250, 250, 250, startAngle, startAngle + sliceAngle);
+            ctx.arc(250, 250, 250, i * angle, (i + 1) * angle);
+            ctx.fillStyle = i % 2 === 0 ? "#444" : "#666";
             ctx.fill();
             ctx.stroke();
-
-            // Metin yerleştirme
             ctx.fillStyle = "white";
-            ctx.font = "20px Arial";
-            ctx.fillText(opt.name, 250 + Math.cos(startAngle + sliceAngle/2) * 100, 250 + Math.sin(startAngle + sliceAngle/2) * 100);
-            
-            startAngle += sliceAngle;
+            ctx.fillText(opt.name, 350, 250 + (i * 20));
         });
     }
 
     function spin() {
-        rotation += 2000 + Math.random() * 1000;
-        document.getElementById("wheelCanvas").style.transform = `rotate(${rotation}deg)`;
+        if(step >= steps.length) return;
+        currentRotation += 2000 + Math.random() * 1000;
+        document.getElementById("wheelCanvas").style.transform = `rotate(${currentRotation}deg)`;
         
         setTimeout(() => {
+            const options = DB[steps[step]];
+            const result = options[Math.floor(Math.random() * options.length)];
+            document.getElementById("log").value += `\n${steps[step]}: ${result.name}`;
             step++;
             if(step < steps.length) {
                 document.getElementById("status").innerText = steps[step];
                 draw();
             } else {
-                document.getElementById("status").innerText = "Karakter Oluşturuldu!";
+                document.getElementById("status").innerText = "Bitti!";
             }
         }, 4000);
     }
@@ -91,11 +87,11 @@
     function addItem() {
         const cat = document.getElementById("catSelect").value;
         const name = document.getElementById("itemName").value;
-        const weight = parseInt(document.getElementById("itemWeight").value);
         if(name) {
-            DB[cat].push({name, weight});
+            DB[cat].push({name: name, weight: 10});
             localStorage.setItem("rpgDB", JSON.stringify(DB));
             draw();
+            alert(name + " eklendi!");
         }
     }
 
