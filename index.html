@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Ultimate RPG Karakter Motoru v3.0</title>
+    <title>Ultimate RPG Karakter Motoru v4.0</title>
     <style>
         body { background: #121212; color: #eee; font-family: 'Courier New', Courier, monospace; display: flex; padding: 20px; margin: 0; }
         .left-panel { flex: 1; display: flex; flex-direction: column; align-items: center; }
@@ -28,7 +28,6 @@
         .history-select { width: 100%; padding: 10px; background: #111; color: #ffcc00; border: 1px solid #555; font-weight: bold; margin-bottom: 15px; cursor: pointer; }
         .char-name-input { width: 100%; padding: 12px; background: #222; color: #fff; border: 1px solid #ffcc00; font-size: 18px; font-weight: bold; margin-bottom: 10px; box-sizing: border-box; text-align: center; }
         
-        /* Düzenlenebilir Not Defteri Stili */
         .notebook { background: #f4ebd0; color: #2b261d; padding: 15px; border-radius: 5px; flex: 1; font-weight: bold; white-space: pre-wrap; font-family: sans-serif; overflow-y: auto; outline: none; border: 2px solid transparent; transition: 0.3s; }
         .notebook:focus { border: 2px solid #ff3333; background: #fff; }
         .log-entry { margin-bottom: 5px; border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
@@ -70,11 +69,7 @@
     
     <input type="text" id="charName" class="char-name-input" placeholder="Karaktere İsim Ver..." oninput="handleNameEdit()">
     
-    <!-- contenteditable="true" özelliği ile defteri yazılabilir yaptık -->
     <div id="notebook" class="notebook" contenteditable="true" oninput="handleNotebookEdit()"></div>
-    <small style="color:#aaa; margin-top:10px; text-align:center; display:block;">
-        *Deftere tıklayıp istediğin gibi yazı ekleyebilir/silebilirsin. Her şey otomatik kaydedilir.
-    </small>
 </div>
 
 <script>
@@ -107,10 +102,10 @@
     let state = {
         stepIdx: 0,
         rotation: 0,
-        spinsLeft: 1,
+        spinsLeft: 1, // Çoklu çevirme hakkı
         vars: { ruhYuzdesi: 0, yas: 0, benzemeYuzdesi: 0 },
         draftLog: "",
-        charName: "" // Yeni: Mevcut karakterin ismi
+        charName: ""
     };
 
     function sortOptions(stepName) { DB[stepName].options.sort((a, b) => b.prob - a.prob); }
@@ -164,7 +159,7 @@
         const data = DB[stepName];
         const validOptions = data.options.filter(o => o.count < o.limit);
         
-        if(validOptions.length === 0) return alert("Bu çarktaki tüm seçeneklerin limiti doldu! Panelden yeni ekleyin.");
+        if(validOptions.length === 0) return alert("Bu çarktaki tüm seçeneklerin limiti doldu!");
 
         document.getElementById("spinBtn").disabled = true;
 
@@ -193,17 +188,29 @@
     function processResult(result, stepName) {
         logToNotebook(stepName, result);
         
-        if (stepName === "Ruh Yüzdesi") state.vars.ruhYuzdesi = parseInt(result) || 0;
-        if (stepName === "1. Yetenek Sayısı" || stepName === "2. Yetenek Sayısı") state.spinsLeft = parseInt(result) || 1;
-        if (stepName === "Yaş") state.vars.yas = parseInt(result) || 0;
-        if (stepName === "Benzeme Yüzdesi") state.vars.benzemeYuzdesi = parseInt(result) || 0;
+        // Gelişmiş Rakam Çıkarıcı (Seçeneğe "3 Tane", "%50" vb. yazılsa bile sadece rakamı alır)
+        const getNum = (str) => {
+            const match = String(str).match(/\d+/);
+            return match ? parseInt(match[0]) : 0;
+        };
+        
+        if (stepName === "Ruh Yüzdesi") state.vars.ruhYuzdesi = getNum(result);
+        if (stepName === "Yaş") state.vars.yas = getNum(result);
+        if (stepName === "Benzeme Yüzdesi") state.vars.benzemeYuzdesi = getNum(result);
+        
+        // ÇIKAN RAKAMI SPINSLEFT'E KAYDETME
+        if (stepName === "1. Yetenek Sayısı" || stepName === "2. Yetenek Sayısı") {
+            let num = getNum(result);
+            state.spinsLeft = num > 0 ? num : 1; 
+        }
 
+        // ÇOKLU ÇEVİRME KONTROLÜ
         if ((stepName === "1. Yetenek" || stepName === "2. Yetenek") && state.spinsLeft > 1) {
             state.spinsLeft--;
-            document.getElementById("stepTitle").innerText = `${stepName} (${state.spinsLeft} kaldı)`;
+            document.getElementById("stepTitle").innerText = `${stepName} (Kalan Seçim: ${state.spinsLeft})`;
             document.getElementById("spinBtn").disabled = false;
             drawWheel();
-            return;
+            return; // Çarkta kal ve işlemi bitir (bir sonraki adıma geçmez)
         }
 
         state.spinsLeft = 1;
@@ -221,13 +228,11 @@
             if(state.draftLog.trim() !== "") {
                 const dateStr = new Date().toLocaleString('tr-TR');
                 const finalName = state.charName.trim() !== "" ? state.charName : "İsimsiz Karakter";
-                
                 charHistory.push({ name: finalName, date: dateStr, log: state.draftLog });
                 saveHistory();
                 updateHistoryDropdown();
-                
                 document.getElementById("historySelect").value = charHistory.length - 1;
-                viewHistory(); // Görünümü güncelle
+                viewHistory(); 
             }
             return;
         }
@@ -243,52 +248,50 @@
         else initStep();
     }
 
-    // --- YENİ: İSİM VE NOT DEFTERİ DÜZENLEME ---
+    function initStep() {
+        const stepName = flow[state.stepIdx];
+        
+        // EĞER ÇOKLU SEÇİM ESNASINDAYSAN BAŞLIKTA BELİRT
+        let titleText = stepName;
+        if ((stepName === "1. Yetenek" || stepName === "2. Yetenek") && state.spinsLeft > 1) {
+            titleText = `${stepName} (Kalan Seçim: ${state.spinsLeft})`;
+        }
+        
+        document.getElementById("stepTitle").innerText = titleText;
+        document.getElementById("spinBtn").disabled = false;
+        document.getElementById("catSelect").value = stepName;
+        updateDevUI();
+        drawWheel();
+    }
+
+    // --- ARAYÜZ VE SİSTEM FONKSİYONLARI ---
 
     function handleNameEdit() {
         const val = document.getElementById("historySelect").value;
         const newName = document.getElementById("charName").value;
-        
-        if(val === "current") {
-            state.charName = newName;
-        } else {
-            charHistory[val].name = newName;
-            saveHistory();
-            updateHistoryDropdown();
-            document.getElementById("historySelect").value = val; // Seçimi koru
-        }
+        if(val === "current") state.charName = newName;
+        else { charHistory[val].name = newName; saveHistory(); updateHistoryDropdown(); document.getElementById("historySelect").value = val; }
     }
 
     function handleNotebookEdit() {
         const val = document.getElementById("historySelect").value;
         const newLog = document.getElementById("notebook").innerHTML;
-        
-        if(val === "current") {
-            state.draftLog = newLog;
-        } else {
-            charHistory[val].log = newLog;
-            saveHistory();
-        }
+        if(val === "current") state.draftLog = newLog;
+        else { charHistory[val].log = newLog; saveHistory(); }
     }
 
-    function saveHistory() {
-        localStorage.setItem("masterRpgHistory", JSON.stringify(charHistory));
-    }
+    function saveHistory() { localStorage.setItem("masterRpgHistory", JSON.stringify(charHistory)); }
 
     function startNewCharacter() {
-        state.stepIdx = 0;
-        state.rotation = 0;
-        state.spinsLeft = 1;
+        state.stepIdx = 0; state.rotation = 0; state.spinsLeft = 1;
         state.vars = { ruhYuzdesi: 0, yas: 0, benzemeYuzdesi: 0 };
-        state.draftLog = "";
-        state.charName = "";
+        state.draftLog = ""; state.charName = "";
         
         document.getElementById("historySelect").value = "current";
         document.getElementById("charName").value = "";
         document.getElementById("notebook").innerHTML = "";
         document.getElementById("spinBtn").style.display = "block";
         document.getElementById("newCharBtn").style.display = "none";
-        
         initStep();
     }
 
@@ -304,7 +307,6 @@
     function updateHistoryDropdown() {
         const select = document.getElementById("historySelect");
         select.innerHTML = '<option value="current">▶ Mevcut Karakter (Oluşturuluyor)</option>';
-        
         charHistory.forEach((char, index) => {
             const opt = document.createElement("option");
             opt.value = index;
@@ -319,25 +321,9 @@
         const nb = document.getElementById("notebook");
         const nameInput = document.getElementById("charName");
         
-        if(val === "current") {
-            nb.innerHTML = state.draftLog;
-            nameInput.value = state.charName;
-        } else {
-            nb.innerHTML = charHistory[val].log;
-            nameInput.value = charHistory[val].name || "";
-        }
+        if(val === "current") { nb.innerHTML = state.draftLog; nameInput.value = state.charName; } 
+        else { nb.innerHTML = charHistory[val].log; nameInput.value = charHistory[val].name || ""; }
         nb.scrollTop = nb.scrollHeight;
-    }
-
-    // --- MEVCUT DİĞER FONKSİYONLAR ---
-
-    function initStep() {
-        const stepName = flow[state.stepIdx];
-        document.getElementById("stepTitle").innerText = stepName;
-        document.getElementById("spinBtn").disabled = false;
-        document.getElementById("catSelect").value = stepName;
-        updateDevUI();
-        drawWheel();
     }
 
     function initDevPanel() {
