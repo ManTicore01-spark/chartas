@@ -2,101 +2,320 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG Karakter Yaratım Motoru (Ultimate)</title>
+    <title>Ultimate RPG Karakter Motoru</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
-        body { background-color: #121212; color: #e0e0e0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        h1 { margin-bottom: 5px; color: #ffcc00; text-shadow: 0 0 10px rgba(255,204,0,0.5); text-align: center; font-size: 22px; }
-        .container { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; max-width: 650px; margin-bottom: 30px; }
-        .status-panel { background: #1e1e1e; border: 1px solid #ffcc00; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; color: #ddd; font-size: 14px; text-align: center; }
-        .step-highlight { color: #ff3333; font-size: 16px; text-transform: uppercase; }
-        .wheel-container { position: relative; width: 320px; height: 320px; margin: 10px 0; }
-        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #ff3333; z-index: 10; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); }
-        canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 5px #ffcc00; transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1); }
-        button { padding: 15px; border-radius: 6px; border: 2px solid #ffcc00; background: #2a2a2a; color: #ffcc00; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; transition: all 0.3s; text-transform: uppercase; }
-        button:hover { background: #ffcc00; color: #1a1a1a; }
-        button:disabled { background: #444; color: #888; border-color: #555; cursor: not-allowed; }
-        .dev-panel { width: 100%; background: #222; border: 1px dashed #00ffcc; border-radius: 6px; margin-top: 10px; overflow: hidden; }
-        .dev-header { background: #111; color: #00ffcc; padding: 10px; text-align: center; font-size: 14px; font-weight: bold; cursor: pointer; }
-        .dev-content { padding: 15px; display: none; flex-direction: column; gap: 10px; }
-        input, select { padding: 10px; background: #333; border: 1px solid #555; color: white; border-radius: 4px; }
-        .notebook { background: #f4ebd0; color: #2b261d; width: 100%; padding: 20px 45px; border-radius: 4px; min-height: 250px; font-weight: bold; line-height: 1.6; }
+        body { background: #121212; color: #eee; font-family: 'Courier New', Courier, monospace; display: flex; padding: 20px; margin: 0; }
+        .left-panel { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .right-panel { width: 400px; background: #1e1e1e; padding: 20px; border-left: 2px solid #333; height: 95vh; overflow-y: auto; }
+        
+        h2 { color: #ffcc00; text-align: center; height: 60px; }
+        .wheel-container { position: relative; width: 400px; height: 400px; margin-bottom: 20px; }
+        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #ff3333; z-index: 10; }
+        canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 20px rgba(0,0,0,0.8); transition: transform 3.5s cubic-bezier(0.15, 0.85, 0.35, 1); }
+        
+        button { padding: 12px 24px; font-size: 18px; font-weight: bold; background: #ffcc00; border: none; cursor: pointer; border-radius: 5px; transition: 0.2s; }
+        button:hover { background: #e6b800; }
+        button:disabled { background: #555; color: #888; cursor: not-allowed; }
+        
+        .dev-panel { margin-top: 20px; padding: 15px; background: #2a2a2a; border-radius: 8px; width: 100%; max-width: 500px; border: 1px solid #444; }
+        .dev-panel input, .dev-panel select { width: 100%; padding: 8px; margin-bottom: 10px; background: #111; color: #fff; border: 1px solid #555; }
+        .dev-row { display: flex; gap: 10px; }
+        .dev-row button { flex: 1; font-size: 14px; padding: 8px; }
+        
+        .notebook { background: #f4ebd0; color: #2b261d; padding: 15px; border-radius: 5px; min-height: 300px; font-weight: bold; white-space: pre-wrap; font-family: sans-serif; }
+        .log-entry { margin-bottom: 5px; border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
     </style>
 </head>
 <body>
-    <h1>RPG Karakter Motoru</h1>
-    <div class="container">
-        <div class="status-panel">Mevcut Aşama:<br><span id="stepDisplay" class="step-highlight">1. Başlat</span></div>
-        <div class="wheel-container"><div class="pointer"></div><canvas id="wheelCanvas" width="500" height="500"></canvas></div>
-        <button id="spinBtn" onclick="spinWheel()">ÇARKI ÇEVİR</button>
 
-        <div class="dev-panel">
-            <div class="dev-header" onclick="toggleDevPanel()">⚙️ Geliştirici Paneli</div>
-            <div class="dev-content" id="devPanelContent">
-                <select id="devCategory">
-                    <option value="mitolojiler">Mitoloji</option><option value="cinsiyetler">Cinsiyet</option>
-                    <option value="yas">Keşif/Güncel Yaş</option><option value="uzmanlik">Uzmanlık</option>
-                </select>
-                <input type="text" id="devName" placeholder="İsim">
-                <input type="number" id="devWeight" placeholder="İhtimal (1-100)">
-                <button onclick="addCustomOption()">Ekle</button>
-            </div>
-        </div>
-
-        <textarea id="notebookArea" class="notebook" readonly></textarea>
+<div class="left-panel">
+    <h2 id="stepTitle">Hazırlanıyor...</h2>
+    <div class="wheel-container">
+        <div class="pointer"></div>
+        <canvas id="wheel" width="500" height="500"></canvas>
     </div>
+    <button id="spinBtn" onclick="spin()">ÇARKI ÇEVİR</button>
 
-    <script>
-        let DB = JSON.parse(localStorage.getItem("rpgDatabase")) || {
-            mitolojiler: [{name: "Yunan", weight: 30}, {name: "İskandinav", weight: 30}],
-            canavarlar: {"Yunan": [{name: "Minotor", weight: 10}], "İskandinav": [{name: "Fenrir", weight: 10}]},
-            yetenekler: {"Minotor": [{name: "Sarsılmaz Güç", weight: 10}], "Varsayilan": [{name: "Pençe", weight: 10}]},
-            yuzdeler: [{name: "%100", val: 100, weight: 10}],
-            yetenekSayisi: [{name: "1", val: 1, weight: 50}],
-            cinsiyetler: [{name: "Erkek", weight: 50}, {name: "Kadın", weight: 50}],
-            zihinselGuc: [{name: "Düşük", weight: 50}, {name: "Yüksek", weight: 50}],
-            yas: [{name: "Çocukluk (5-10)", weight: 30}, {name: "Gençlik (15-20)", weight: 40}, {name: "Yetişkin (30+)", weight: 30}],
-            uzmanlik: [{name: "Acemi", weight: 30}, {name: "Deneyimli", weight: 40}, {name: "Usta", weight: 30}]
-        };
+    <div class="dev-panel">
+        <h3>⚙️ Geliştirici Paneli</h3>
+        <select id="catSelect" onchange="updateDevUI()"></select>
+        <div class="dev-row">
+            <input type="text" id="optName" placeholder="Seçenek Adı">
+            <input type="number" id="optProb" placeholder="İhtimal (Örn: 30)">
+            <input type="number" id="optLimit" placeholder="Max Çıkma Sayısı (Örn: 1)">
+        </div>
+        <div class="dev-row">
+            <button onclick="addOption()" style="background: #4CAF50; color:white;">Ekle / Güncelle</button>
+            <button onclick="deleteOption()" style="background: #f44336; color:white;">Seçiliyi Sil</button>
+        </div>
+        <small style="color:#aaa; display:block; margin-top:10px;">*Aynı isimle eklersen günceller. Silmek için adı yazıp Sile bas.</small>
+    </div>
+</div>
 
-        let charData = { kesifYasi: "", uzmanlik: "", guncelYas: "" };
-        let step = 1; 
-        let spinsLeft = 0; 
-        let currentOptions = [];
-        let currentRotation = 0;
-        const canvas = document.getElementById("wheelCanvas");
+<div class="right-panel">
+    <h3 style="color: #ffcc00; margin-top: 0;">📜 Karakter Not Defteri</h3>
+    <div id="notebook" class="notebook"></div>
+</div>
+
+<script>
+    // Sistem Akışı ve Ana Veritabanı
+    const flow = [
+        "Mitoloji", "1. Canavar", "Ruh Yüzdesi", "2. Mitoloji", "2. Canavar", 
+        "1. Yetenek Sayısı", "1. Yetenek", "2. Yetenek Sayısı", "2. Yetenek", 
+        "Yaş", "Benzeme Yüzdesi", "Benzeyen Yerler", "Cinsiyet", "Göz Rengi", 
+        "Saç Rengi", "Ten Rengi", "Boy", "Kilo", "Dayanıklılık", "Hız", 
+        "Zihin Gücü", "Zeka", "Güç", "Ülke Konumu", "Vatandaşlık", "Kişilik"
+    ];
+
+    // Örnek Veritabanı (Sen buradan veya panelden istediğin kadar ekleyebilirsin)
+    let DB = JSON.parse(localStorage.getItem("masterRpgDB")) || {};
+    
+    // Eksik adımları varsayılan verilerle doldur
+    flow.forEach(step => {
+        if (!DB[step]) {
+            DB[step] = {
+                colorBase: { r: Math.floor(Math.random()*100), g: Math.floor(Math.random()*100), b: Math.floor(Math.random()*100) },
+                options: [
+                    { name: "Seçenek 1", prob: 50, limit: 1, count: 0 },
+                    { name: "Seçenek 2", prob: 50, limit: 1, count: 0 }
+                ]
+            };
+            // Özel varsayılanlar
+            if(step === "Ruh Yüzdesi" || step === "Benzeme Yüzdesi") DB[step].options = [{name: "100", prob: 30, limit: 99, count:0}, {name: "50", prob: 70, limit: 99, count:0}];
+            if(step === "Yaş") DB[step].options = [{name: "25", prob: 50, limit: 99, count:0}, {name: "40", prob: 50, limit: 99, count:0}];
+            if(step.includes("Yetenek Sayısı")) DB[step].options = [{name: "1", prob: 50, limit: 99, count:0}, {name: "3", prob: 50, limit: 99, count:0}];
+        }
+    });
+
+    // Uygulama Durumu (State)
+    let state = {
+        stepIdx: 0,
+        rotation: 0,
+        spinsLeft: 1,
+        vars: { ruhYuzdesi: 0, yas: 0, benzemeYuzdesi: 0, limitReached: false }
+    };
+
+    // Yüzdelere Göre Sıralama (Büyükten küçüğe)
+    function sortOptions(stepName) {
+        DB[stepName].options.sort((a, b) => b.prob - a.prob);
+    }
+
+    // Çark Çizimi
+    function drawWheel() {
+        const stepName = flow[state.stepIdx];
+        sortOptions(stepName);
+        const data = DB[stepName];
+        const canvas = document.getElementById("wheel");
         const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, 500, 500);
 
-        function initStep() {
-            if (step === 1) { stepDisplay("1. Mitoloji", DB.mitolojiler); }
-            else if (step === 2) { stepDisplay("2. Canavar", DB.canavarlar[charData.mit1] || DB.canavarlar["Yunan"]); }
-            // ... (Diğer adımlar benzeri şekilde 11'e kadar devam eder)
-            else if (step === 12) { stepDisplay("12. Yetenek Keşif Yaşı", DB.yas); }
-            else if (step === 13) { stepDisplay("13. Uzmanlık Seviyesi", DB.uzmanlik); }
-            else if (step === 14) { stepDisplay("14. Güncel Yaş", DB.yas); }
-            else { finish(); }
+        // Çark dilimlerini hesapla (Tükenenler dahil çarkta yer kaplar)
+        const totalProb = data.options.reduce((sum, opt) => sum + opt.prob, 0);
+        let startAngle = 0;
+
+        data.options.forEach((opt, i) => {
+            const sliceAngle = (opt.prob / totalProb) * 2 * Math.PI;
+            
+            // Renk tonlaması: Koyudan açığa doğru (i arttıkça rgb değerleri artar)
+            const shade = i * (150 / data.options.length);
+            const r = Math.min(255, data.colorBase.r + shade);
+            const g = Math.min(255, data.colorBase.g + shade);
+            const b = Math.min(255, data.colorBase.b + shade);
+            
+            // Tükenmiş (limit dolmuş) seçenekler soluk/gri görünür
+            const isExhausted = opt.count >= opt.limit;
+            ctx.fillStyle = isExhausted ? "#3a3a3a" : `rgb(${r},${g},${b})`;
+
+            ctx.beginPath();
+            ctx.moveTo(250, 250);
+            ctx.arc(250, 250, 250, startAngle, startAngle + sliceAngle);
+            ctx.fill();
+            
+            ctx.strokeStyle = "#111";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Yazı çizimi
+            ctx.save();
+            ctx.translate(250, 250);
+            ctx.rotate(startAngle + sliceAngle / 2);
+            ctx.textAlign = "right";
+            ctx.fillStyle = isExhausted ? "#666" : "#fff";
+            ctx.font = "bold 18px Courier New";
+            ctx.fillText(opt.name, 230, 6);
+            ctx.restore();
+
+            // Seçim algoritması için açıları kaydet
+            opt.startAngle = startAngle;
+            opt.endAngle = startAngle + sliceAngle;
+            
+            startAngle += sliceAngle;
+        });
+    }
+
+    function spin() {
+        const stepName = flow[state.stepIdx];
+        const data = DB[stepName];
+        
+        // Geçerli (tükenmemiş) seçenekleri bul
+        const validOptions = data.options.filter(o => o.count < o.limit);
+        
+        if(validOptions.length === 0) {
+            alert("Bu çarktaki tüm seçeneklerin çıkma limiti doldu! Lütfen panelden yeni seçenek ekleyin.");
+            return;
         }
 
-        function stepDisplay(title, options) {
-            document.getElementById("stepDisplay").innerText = title;
-            currentOptions = options;
+        document.getElementById("spinBtn").disabled = true;
+
+        // Mantıksal olarak kazananı belirle (Sadece geçerli olanlar arasından)
+        const validTotalWeight = validOptions.reduce((sum, opt) => sum + opt.prob, 0);
+        let randomWeight = Math.random() * validTotalWeight;
+        let winner = null;
+
+        for (let opt of validOptions) {
+            randomWeight -= opt.prob;
+            if (randomWeight <= 0) {
+                winner = opt;
+                break;
+            }
+        }
+
+        // Kazananın çarktaki fiziksel açısını bul ve ibreye (tepeye, yani 270 derece) denk getir
+        const winnerMidAngle = winner.startAngle + (winner.endAngle - winner.startAngle) / 2;
+        const targetRotation = (270 * Math.PI / 180) - winnerMidAngle;
+        
+        // Rastgele 5-10 tam tur ekle
+        state.rotation += (Math.PI * 2 * (5 + Math.floor(Math.random() * 5))); 
+        
+        // Son açıyı ayarla
+        const finalAngle = state.rotation + targetRotation;
+        document.getElementById("wheel").style.transform = `rotate(${finalAngle}rad)`;
+
+        setTimeout(() => {
+            winner.count++; // Çıkma sayısını artır
+            saveDB();
+            processResult(winner.name, stepName);
+        }, 3500);
+    }
+
+    // Seçim Sonucunu İşleme ve Koşullu Yönlendirme
+    function processResult(result, stepName) {
+        logToNotebook(stepName, result);
+        
+        // Özel Koşullar
+        if (stepName === "Ruh Yüzdesi") state.vars.ruhYuzdesi = parseInt(result) || 0;
+        if (stepName === "1. Yetenek Sayısı" || stepName === "2. Yetenek Sayısı") state.spinsLeft = parseInt(result) || 1;
+        if (stepName === "Yaş") state.vars.yas = parseInt(result) || 0;
+        if (stepName === "Benzeme Yüzdesi") state.vars.benzemeYuzdesi = parseInt(result) || 0;
+
+        // Çoklu çevirme (Yetenekler için)
+        if ((stepName === "1. Yetenek" || stepName === "2. Yetenek") && state.spinsLeft > 1) {
+            state.spinsLeft--;
+            document.getElementById("stepTitle").innerText = `${stepName} (${state.spinsLeft} kaldı)`;
+            document.getElementById("spinBtn").disabled = false;
             drawWheel();
+            return;
         }
 
-        function spinWheel() {
-            // ... (Spin mantığı aynı kalacak)
-            // Sonuçları processResult() ile charData içine işle
-            step++;
+        state.spinsLeft = 1; // Sıfırla
+        determineNextStep();
+    }
+
+    function determineNextStep() {
+        state.stepIdx++;
+        if (state.stepIdx >= flow.length) {
+            document.getElementById("stepTitle").innerText = "Karakter Tamamlandı!";
+            return;
+        }
+
+        const next = flow[state.stepIdx];
+
+        // Atlama (Skip) Mantıkları
+        let skip = false;
+        if ((next === "2. Mitoloji" || next === "2. Canavar" || next === "2. Yetenek Sayısı" || next === "2. Yetenek") && state.vars.ruhYuzdesi === 100) skip = true;
+        if (next === "Benzeme Yüzdesi" && state.vars.yas >= 30) skip = true;
+        if (next === "Benzeyen Yerler" && (state.vars.benzemeYuzdesi === 100 || state.vars.yas >= 30)) skip = true;
+
+        if (skip) {
+            determineNextStep(); // Atla ve bir sonrakini kontrol et
+        } else {
             initStep();
         }
+    }
 
-        function finish() {
-            document.getElementById("notebookArea").value = `KARAKTER ÖZETİ:\nKeşif Yaşı: ${charData.kesifYasi}\nUzmanlık: ${charData.uzmanlik}\nGüncel Yaş: ${charData.guncelYas}`;
+    function initStep() {
+        const stepName = flow[state.stepIdx];
+        document.getElementById("stepTitle").innerText = stepName;
+        document.getElementById("spinBtn").disabled = false;
+        
+        // Geliştirici panelindeki combobox'ı mevcut adıma eşitle
+        document.getElementById("catSelect").value = stepName;
+        updateDevUI();
+        drawWheel();
+    }
+
+    // --- Geliştirici Paneli İşlevleri ---
+    function initDevPanel() {
+        const select = document.getElementById("catSelect");
+        flow.forEach(step => {
+            const opt = document.createElement("option");
+            opt.value = step;
+            opt.innerText = step;
+            select.appendChild(opt);
+        });
+    }
+
+    function updateDevUI() {
+        document.getElementById("optName").value = "";
+        document.getElementById("optProb").value = "";
+        document.getElementById("optLimit").value = "";
+    }
+
+    function addOption() {
+        const stepName = document.getElementById("catSelect").value;
+        const name = document.getElementById("optName").value;
+        const prob = parseInt(document.getElementById("optProb").value) || 10;
+        const limit = parseInt(document.getElementById("optLimit").value) || 1;
+
+        if(!name) return alert("İsim giriniz!");
+
+        const existing = DB[stepName].options.find(o => o.name === name);
+        if(existing) {
+            existing.prob = prob;
+            existing.limit = limit;
+        } else {
+            DB[stepName].options.push({ name, prob, limit, count: 0 });
         }
         
-        function toggleDevPanel() { document.getElementById("devPanelContent").style.display = "flex"; }
-        initStep();
-    </script>
+        saveDB();
+        if(stepName === flow[state.stepIdx]) drawWheel();
+        alert("Başarıyla güncellendi!");
+    }
+
+    function deleteOption() {
+        const stepName = document.getElementById("catSelect").value;
+        const name = document.getElementById("optName").value;
+        DB[stepName].options = DB[stepName].options.filter(o => o.name !== name);
+        saveDB();
+        if(stepName === flow[state.stepIdx]) drawWheel();
+        alert("Silindi (Eğer varsa).");
+    }
+
+    // Yardımcı Fonksiyonlar
+    function logToNotebook(category, result) {
+        const nb = document.getElementById("notebook");
+        nb.innerHTML += `<div class="log-entry"><b>${category}:</b> ${result}</div>`;
+        nb.scrollTop = nb.scrollHeight;
+    }
+
+    function saveDB() {
+        localStorage.setItem("masterRpgDB", JSON.stringify(DB));
+    }
+
+    // Sistemi Başlat
+    initDevPanel();
+    initStep();
+
+</script>
 </body>
 </html>
