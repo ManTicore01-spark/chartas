@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Süper Şans Çarkı - Çıkma Limitli</title>
+    <title>Yetenek Ağacı & Dallanan Şans Çarkı</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -34,12 +34,12 @@
 
         .container {
             display: flex;
-            gap: 30px;
+            gap: 25px;
             background: #1e1e1e;
             padding: 25px;
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            max-width: 1000px;
+            max-width: 1200px;
             width: 100%;
             box-sizing: border-box;
         }
@@ -48,8 +48,16 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+            flex: 1.3;
+            min-width: 360px;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
             flex: 1;
-            min-width: 340px;
+            align-items: center;
         }
 
         .section {
@@ -57,6 +65,8 @@
             padding: 15px;
             border-radius: 10px;
             border: 1px solid #3a3a3a;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         h3 {
@@ -70,14 +80,14 @@
 
         select, input {
             width: 100%;
-            padding: 10px;
+            padding: 9px;
             background-color: #333;
             border: 1px solid #444;
             color: white;
             border-radius: 6px;
             box-sizing: border-box;
             margin-bottom: 8px;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         select:focus, input:focus {
@@ -89,6 +99,7 @@
             display: flex;
             gap: 6px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .color-picker-wrapper {
@@ -107,8 +118,8 @@
 
         input[type="color"] {
             padding: 0;
-            width: 45px;
-            height: 38px;
+            width: 40px;
+            height: 34px;
             border: 1px solid #444;
             border-radius: 6px;
             cursor: pointer;
@@ -122,7 +133,7 @@
             font-weight: bold;
             cursor: pointer;
             transition: 0.2s;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .btn-add { background-color: #00ff88; color: #121212; width: 100%; margin-top: 5px; }
@@ -140,25 +151,60 @@
         .btn-spin:hover { background-color: #e60072; transform: translateY(-2px); }
 
         .option-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             background: #222;
-            padding: 6px 10px;
+            padding: 8px 10px;
             margin-bottom: 6px;
             border-radius: 5px;
             font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .option-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option-bottom {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid #333;
+            padding-top: 5px;
         }
 
         .option-left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .list-limit-input {
+            width: 50px !important;
+            padding: 3px 5px !important;
+            margin: 0 !important;
+            text-align: center;
+            background: #444 !important;
+            border: 1px solid #555 !important;
+        }
+
+        .list-select-link {
+            padding: 3px 5px !important;
+            margin: 0 !important;
+            background: #444 !important;
+            border: 1px solid #555 !important;
+            font-size: 11px !important;
+            color: #00ecff !important;
+            width: auto !important;
+            max-width: 150px;
         }
 
         .list-color-picker {
-            width: 24px !important;
-            height: 24px !important;
+            width: 20px !important;
+            height: 20px !important;
             padding: 0 !important;
             margin: 0 !important;
             border: none !important;
@@ -168,19 +214,18 @@
         .btn-delete {
             background: #ff4757;
             color: white;
-            padding: 2px 8px;
-            font-size: 12px;
+            padding: 3px 8px;
+            font-size: 11px;
             border-radius: 4px;
         }
 
-        /* SAĞ PANEL & OK */
+        /* GÖRSEL ÇARK ALANI */
         .wheel-box {
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            flex: 1;
-            padding: 20px;
+            width: 100%;
         }
 
         #canvas {
@@ -199,101 +244,218 @@
             transform: translateY(-50%);
             width: 0;
             height: 0;
-            border-top: 20px solid transparent;
-            border-bottom: 20px solid transparent;
-            border-right: 35px solid #ff007f;
+            border-top: 18px solid transparent;
+            border-bottom: 18px solid transparent;
+            border-right: 32px solid #ff007f;
             z-index: 999;
-            filter: drop-shadow(-4px 0px 6px rgba(0,0,0,0.6));
         }
 
-        /* Mobil Uyumluluk Ekran Düzenlemesi */
+        /* GEÇMİŞ LOG ALANI */
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e1e1e;
+            padding: 6px 10px;
+            margin-bottom: 5px;
+            border-radius: 6px;
+            border-left: 4px solid #ff007f;
+            font-size: 12px;
+        }
+        .history-time {
+            color: #777;
+            font-size: 10px;
+        }
+        .btn-clear-history {
+            background: transparent;
+            color: #ff4757;
+            border: 1px solid #ff4757;
+            width: 100%;
+            margin-top: 8px;
+            padding: 5px;
+            font-size: 11px;
+        }
+        .btn-clear-history:hover { background: rgba(255, 71, 87, 0.1); }
+
+        .current-path-badge {
+            background-color: #ff007f;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        /* SAYFA SAYFA NOT DEFTERİ */
+        .notebook {
+            background: #fcf8e3;
+            color: #333;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 10px solid #f0ad4e;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.3);
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 150px;
+            position: relative;
+        }
+        .notebook-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px dashed #ccc;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .notebook-content {
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .notebook-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            gap: 10px;
+        }
+        .btn-page {
+            background: #333;
+            color: #fff;
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+        .btn-page:disabled {
+            background: #ccc;
+            color: #777;
+            cursor: not-allowed;
+        }
+
         @media (max-width: 768px) {
-            .container {
-                flex-direction: column-reverse;
-                padding: 15px;
-            }
-            .controls {
-                min-width: 100%;
-            }
-            .pointer {
-                right: 15px;
-            }
+            .container { flex-direction: column-reverse; padding: 15px; }
+            .controls, .right-panel { min-width: 100%; }
+            .pointer { right: 15px; }
         }
     </style>
 </head>
 <body>
 
-    <h1>🎯 Süper Şans Çarkı</h1>
-    <div class="subtitle">Verileriniz tarayıcınıza otomatik olarak kaydedilir, sayfa yenilense de kaybolmaz.</div>
+    <h1>🎯 Süper Şans Çarkı & Yetenek Ağacı</h1>
+    <div class="subtitle">Çark sonuçlarını alt dallara bağlayarak zincirleme şans sistemleri kurun.</div>
 
     <div class="container">
         <!-- SOL PANEL (KONTROLLER) -->
         <div class="controls">
             
             <div class="section">
-                <h3>Kategori Yönetimi</h3>
-                <label>Ana Kategori:</label>
+                <h3>Kategori Yönetimi (Çark Seçimi)</h3>
+                <label>Ana Dal / Ağaç:</label>
                 <select id="main-category-select"></select>
                 
-                <label>Alt Kategori:</label>
+                <label>Aktif Alt Çark:</label>
                 <select id="sub-category-select"></select>
             </div>
 
             <div class="section">
-                <h3>Yeni Kategori Dünyası Yarat</h3>
-                <input type="text" id="new-main-input" placeholder="Yeni Ana Kategori Adı...">
-                <button class="btn-add" id="add-main-btn">Ana Kategori Ekle</button>
+                <h3>Yeni Çark / Dal Oluştur</h3>
+                <input type="text" id="new-main-input" placeholder="Yeni Ana Ağaç Başlığı (Örn: Savaşçı Yetenekleri)...">
+                <button class="btn-add" id="add-main-btn">Ana Ağaç Ekle</button>
                 
                 <div style="margin-top: 12px;">
-                    <input type="text" id="new-sub-input" placeholder="Yeni Alt Kategori Adı...">
-                    <button class="btn-add" id="add-sub-btn" style="background-color: #00ecff;">Seçili Kategoriye Alt Grup Ekle</button>
+                    <input type="text" id="new-sub-input" placeholder="Yeni Alt Çark Adı (Örn: Alev Büyüleri)...">
+                    <button class="btn-add" id="add-sub-btn" style="background-color: #00ecff;">Seçili Ağaca Alt Çark Ekle</button>
                 </div>
             </div>
 
             <div class="section">
-                <h3>Çarka Seçenek Yükle</h3>
+                <h3>Çarka Seçenek Ekle</h3>
                 <div class="row">
-                    <input type="text" id="option-text-input" placeholder="Örn: Wild Rift" style="flex: 2;">
-                    <input type="number" id="option-percent-input" placeholder="Şans %" min="1" max="100" style="flex: 1.1;">
-                    <input type="number" id="option-limit-input" placeholder="Limit" min="1" value="1" style="flex: 0.9;">
+                    <input type="text" id="option-text-input" placeholder="Örn: Ateş Topu" style="flex: 2; min-width: 120px;">
+                    <input type="number" id="option-percent-input" placeholder="Şans %" min="1" max="100" style="flex: 1;">
+                    <input type="number" id="option-limit-input" placeholder="Hak" min="0" value="1" style="flex: 0.8;">
                     <div class="color-picker-wrapper">
                         <span class="color-label">Renk</span>
                         <input type="color" id="option-color-input" value="#00ff88">
                     </div>
                 </div>
-                <button class="btn-add" id="add-option-btn" style="background-color: #ffa502; color: white;">Listeye ve Çarka İşle</button>
+                <button class="btn-add" id="add-option-btn" style="background-color: #ffa502; color: white;">Çarka İlave Et</button>
             </div>
 
             <div class="section">
-                <h3>Mevcut Elemanlar (Toplam Dilim: <span id="total-pct">0</span>%)</h3>
-                <div id="options-list-container" style="max-height: 150px; overflow-y: auto;"></div>
+                <h3>Mevcut Seçenekler ve Bağlantılar (<span id="total-pct">0</span>%)</h3>
+                <div id="options-list-container" style="max-height: 250px; overflow-y: auto; padding-right: 4px;"></div>
             </div>
 
-            <button class="btn-spin" id="spin-btn">ÇARKI ÇEVİR!</button>
+            <button class="btn-spin" id="spin-btn">ŞANSINI DENE VE ÇEVİR!</button>
         </div>
 
-        <!-- SAĞ PANEL (GÖRSEL ÇARK) -->
-        <div class="wheel-box">
-            <div class="pointer"></div>
-            <canvas id="canvas" width="460" height="460"></canvas>
+        <!-- SAĞ PANEL (GÖRSEL ÇARK & GEÇMİŞ) -->
+        <div class="right-panel">
+            <div style="text-align: center; width:100%;">
+                <span class="current-path-badge" id="path-badge">Mevcut Çark: Yok</span>
+            </div>
+            
+            <div class="wheel-box">
+                <div class="pointer"></div>
+                <canvas id="canvas" width="440" height="440"></canvas>
+            </div>
+
+            <!-- GEÇMİŞ LOG ALANI -->
+            <div class="section">
+                <h3>📋 Çevirme & İlerleme Geçmişi</h3>
+                <div id="history-container" style="max-height: 100px; overflow-y: auto; padding-right: 5px;"></div>
+                <button class="btn-clear-history" id="clear-history-btn">Geçmişi Temizle</button>
+            </div>
+
+            <!-- SAYFA SAYFA NOT DEFTERİ (YENİ) -->
+            <div class="section" style="background: #222;">
+                <h3 style="color: #f0ad4e;">📒 Macera Not Defteri (Tamamlanan Turlar)</h3>
+                <div class="notebook">
+                    <div class="notebook-header">
+                        <span id="notebook-page-title">SAYFA: 0 / 0</span>
+                        <span id="notebook-date" style="font-size:11px; color:#666;">--:--</span>
+                    </div>
+                    <div class="notebook-content" id="notebook-body">Henüz tamamlanmış bir yetenek turu hikayesi yok. Bir sonuca ulaşana kadar çarkı dallarda çevirmeye devam edin!</div>
+                </div>
+                <div class="notebook-nav">
+                    <button class="btn-page" id="btn-prev-page" disabled>◀ Önceki Sayfa</button>
+                    <button class="btn-page" id="btn-clear-notebook" style="background:#ff4757;">Defteri Yak</button>
+                    <button class="btn-page" id="btn-next-page" disabled>Sonraki Sayfa ▶</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
         const defaultData = {
-            "Oyunlar": {
-                "Mobil Oyunlar": [
-                    { text: "Wild Rift", percent: 60, limit: 2, color: "#9b59b6" },
-                    { text: "PUBG Mobile", percent: 40, limit: 1, color: "#e67e22" }
+            "Savaşçı Sınıfı": {
+                "Ana Başlangıç": [
+                    { text: "Büyücülük Yolu", percent: 50, limit: 99, color: "#9b59b6", nextSub: "Büyü Okulu" },
+                    { text: "Fiziksel Yol", percent: 50, limit: 99, color: "#e67e22", nextSub: "Silah Eğitimi" }
                 ],
-                "PC Oyunları": [
-                    { text: "Stardew Valley", percent: 50, limit: 3, color: "#1abc9c" },
-                    { text: "Hero Siege", percent: 50, limit: 1, color: "#34495e" }
+                "Büyü Okulu": [
+                    { text: "Ateş Elementi (Son)", percent: 60, limit: 1, color: "#e74c3c", nextSub: "" },
+                    { text: "Buz Elementi (Son)", percent: 40, limit: 1, color: "#3498db", nextSub: "" }
+                ],
+                "Silah Eğitimi": [
+                    { text: "Kılıç Ustası (Son)", percent: 50, limit: 1, color: "#2ecc71", nextSub: "" },
+                    { text: "Okçu Ustası (Son)", percent: 50, limit: 1, color: "#f1c40f", nextSub: "" }
                 ]
             }
         };
 
         let appData = {};
+        let spinHistory = [];
+        let notebookPages = []; // Not defteri sayfaları
+        let activePageIndex = 0; // Şu an bakılan sayfa indexi
+
+        // Aktif turda toplanan ödüllerin/adımların geçici listesi
+        let currentTourSteps = []; 
+
         let currentMain = "";
         let currentSub = "";
         let isSpinning = false;
@@ -303,92 +465,64 @@
         let audioCtx = null;
 
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
 
         function playTickSound() {
-            initAudio();
-            if (!audioCtx) return;
-            let osc = audioCtx.createOscillator();
-            let gain = audioCtx.createGain();
-            osc.type = 'triangle'; 
-            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            initAudio(); if (!audioCtx) return;
+            let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
-            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.05);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
         }
 
         function playWinSound() {
-            initAudio();
-            if (!audioCtx) return;
+            initAudio(); if (!audioCtx) return;
             let notes = [523.25, 659.25, 783.99, 1046.50];
             notes.forEach((freq, index) => {
-                let osc = audioCtx.createOscillator();
-                let gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.1);
-                gain.gain.setValueAtTime(0.12, audioCtx.currentTime + index * 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + index * 0.1 + 0.2);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(audioCtx.currentTime + index * 0.1);
-                osc.stop(audioCtx.currentTime + index * 0.1 + 0.2);
+                let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.08);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime + index * 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + index * 0.08 + 0.18);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + index * 0.08); osc.stop(audioCtx.currentTime + index * 0.08 + 0.18);
             });
         }
 
         function saveToLocalStorage() {
-            localStorage.setItem('carkAppDataWeb', JSON.stringify(appData));
+            localStorage.setItem('carkTreeAppData', JSON.stringify(appData));
+            localStorage.setItem('carkTreeHistory', JSON.stringify(spinHistory));
+            localStorage.setItem('carkTreeNotebook', JSON.stringify(notebookPages));
+            localStorage.setItem('carkTreeTourSteps', JSON.stringify(currentTourSteps));
         }
 
         function loadFromLocalStorage() {
-            const savedData = localStorage.getItem('carkAppDataWeb');
-            if (savedData) {
-                appData = JSON.parse(savedData);
-            } else {
-                appData = JSON.parse(JSON.stringify(defaultData));
-            }
+            const savedData = localStorage.getItem('carkTreeAppData');
+            appData = savedData ? JSON.parse(savedData) : JSON.parse(JSON.stringify(defaultData));
+            const savedHistory = localStorage.getItem('carkTreeHistory');
+            spinHistory = savedHistory ? JSON.parse(savedHistory) : [];
+            const savedNotebook = localStorage.getItem('carkTreeNotebook');
+            notebookPages = savedNotebook ? JSON.parse(savedNotebook) : [];
+            const savedTour = localStorage.getItem('carkTreeTourSteps');
+            currentTourSteps = savedTour ? JSON.parse(savedTour) : [];
+
             currentMain = Object.keys(appData)[0] || "";
-            if (currentMain) {
-                currentSub = Object.keys(appData[currentMain])[0] || "";
-            } else {
-                currentSub = "";
-            }
-        }
-
-        function generateRandomColor(index, total) {
-            const hue = (index * (360 / Math.max(total, 1))) % 360;
-            return `hsl(${hue}, 80%, 55%)`; 
-        }
-
-        function refreshColorsAndData() {
-            if(!appData[currentMain] || !appData[currentMain][currentSub]) return;
-            let items = appData[currentMain][currentSub];
-            items.forEach((item, index) => {
-                if(!item.color) item.color = generateRandomColor(index, items.length);
-                if(item.limit === undefined) item.limit = 1;
-            });
+            if (currentMain) currentSub = Object.keys(appData[currentMain])[0] || "";
+            
+            activePageIndex = notebookPages.length > 0 ? notebookPages.length - 1 : 0;
         }
 
         function updateUI() {
             const mainSelect = document.getElementById('main-category-select');
-            mainSelect.innerHTML = "";
-            Object.keys(appData).forEach(main => {
-                mainSelect.innerHTML += `<option value="${main}" ${main === currentMain ? 'selected' : ''}>${main}</option>`;
-            });
+            mainSelect.innerHTML = Object.keys(appData).map(m => `<option value="${m}" ${m===currentMain?'selected':''}>${m}</option>`).join('');
 
             const subSelect = document.getElementById('sub-category-select');
-            subSelect.innerHTML = "";
-            if (appData[currentMain]) {
-                Object.keys(appData[currentMain]).forEach(sub => {
-                    subSelect.innerHTML += `<option value="${sub}" ${sub === currentSub ? 'selected' : ''}>${sub}</option>`;
-                });
-            }
+            subSelect.innerHTML = appData[currentMain] ? Object.keys(appData[currentMain]).map(s => `<option value="${s}" ${s===currentSub?'selected':''}>${s}</option>`).join('') : '';
+
+            document.getElementById('path-badge').innerText = `Konum: ${currentMain || 'Yok'} > ${currentSub || 'Yok'}`;
 
             const listContainer = document.getElementById('options-list-container');
             listContainer.innerHTML = "";
@@ -396,65 +530,117 @@
 
             if (appData[currentMain] && appData[currentMain][currentSub]) {
                 let items = appData[currentMain][currentSub];
-                refreshColorsAndData();
+                let allSubs = Object.keys(appData[currentMain]);
 
                 items.forEach((item, index) => {
                     totalPercent += Number(item.percent);
+                    if(item.nextSub === undefined) item.nextSub = "";
+
+                    let optionsLinkMarkup = `<option value="">-- Dallanma (Son) --</option>`;
+                    allSubs.forEach(subName => {
+                        if(subName !== currentSub) {
+                            optionsLinkMarkup += `<option value="${subName}" ${item.nextSub === subName ? 'selected' : ''}>➡️ ${subName}</option>`;
+                        }
+                    });
+
                     const isExhausted = item.limit <= 0;
                     const textStyle = isExhausted ? 'text-decoration: line-through; opacity: 0.4;' : '';
-                    const limitText = isExhausted ? 'TÜKENDİ' : `Kalan Hak: ${item.limit}`;
 
                     listContainer.innerHTML += `
-                        <div class="option-item" style="${isExhausted ? 'background: #1a1a1a;' : ''}">
-                            <div class="option-left" style="${textStyle}">
-                                <input type="color" class="list-color-picker" value="${item.color.startsWith('hsl') ? hslToHex(item.color) : item.color}" onchange="changeOptionColor(${index}, this.value)" ${isExhausted ? 'disabled' : ''}>
-                                <span style="color:${item.color}; font-weight:bold;">${item.text} (%${item.percent})</span>
-                                <span style="font-size: 11px; color: #aaa; margin-left: 5px;">[${limitText}]</span>
+                        <div class="option-item" style="${isExhausted ? 'background: #161616;' : ''}">
+                            <div class="option-top">
+                                <div class="option-left">
+                                    <input type="color" class="list-color-picker" value="${item.color}" onchange="changeOptionColor(${index}, this.value)">
+                                    <span style="color:${item.color}; font-weight:bold; ${textStyle}">${item.text} (%${item.percent})</span>
+                                </div>
+                                <button class="btn-delete" onclick="deleteOption(${index})">Sil</button>
                             </div>
-                            <button class="btn-delete" onclick="deleteOption(${index})">Sil</button>
+                            <div class="option-bottom">
+                                <span style="font-size: 11px; color: #aaa;">Hak:</span>
+                                <input type="number" class="list-limit-input" min="0" value="${item.limit}" onchange="changeOptionLimit(${index}, this.value)">
+                                
+                                <span style="font-size: 11px; color: #aaa; margin-left:10px;">Bağlantı Hedefi:</span>
+                                <select class="list-select-link" onchange="changeOptionLink(${index}, this.value)">
+                                    ${optionsLinkMarkup}
+                                </select>
+                            </div>
                         </div>
                     `;
                 });
             }
             document.getElementById('total-pct').innerText = totalPercent;
+            updateHistoryUI();
+            updateNotebookUI();
             drawWheel(0);
         }
 
-        function hslToHex(hslStr) {
-            let matches = hslStr.match(/\d+/g);
-            if (!matches) return "#00ff88";
-            let h = parseInt(matches[0]) / 360;
-            let s = parseInt(matches[1]) / 100;
-            let l = parseInt(matches[2]) / 100;
-            let r, g, b;
-            if (s === 0) {
-                r = g = b = l;
-            } else {
-                const hue2rgb = (p, q, t) => {
-                    if (t < 0) t += 1;
-                    if (t > 1) t -= 1;
-                    if (t < 1/6) return p + (q - p) * 6 * t;
-                    if (t < 1/2) return q;
-                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-                    return p;
-                };
-                let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-                let p = 2 * l - q;
-                r = hue2rgb(p, q, h + 1/3);
-                g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1/3);
+        function updateHistoryUI() {
+            const container = document.getElementById('history-container');
+            if (spinHistory.length === 0) {
+                container.innerHTML = `<div style="color: #666; font-size: 12px; text-align: center; padding: 10px;">Henüz hareket yok.</div>`;
+                return;
             }
-            const toHex = x => {
-                const hex = Math.round(x * 255).toString(16);
-                return hex.length === 1 ? '0' + hex : hex;
-            };
-            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+            container.innerHTML = spinHistory.map(log => `
+                <div class="history-item" style="border-left-color: ${log.color || '#ff007f'}">
+                    <div>
+                        <span style="font-weight: bold; color: #fff;">${log.text}</span>
+                        ${log.transition ? ` <span style="color:#00ecff; font-size:11px;">[${log.transition}]</span>` : ''}
+                    </div>
+                    <span class="history-time">${log.time}</span>
+                </div>
+            `).join('');
+        }
+
+        // NOT DEFTERİ EKRANINI GÜNCELLEME
+        function updateNotebookUI() {
+            const pageTitle = document.getElementById('notebook-page-title');
+            const dateSpan = document.getElementById('notebook-date');
+            const bodyDiv = document.getElementById('notebook-body');
+            const btnPrev = document.getElementById('btn-prev-page');
+            const btnNext = document.getElementById('btn-next-page');
+
+            if (notebookPages.length === 0) {
+                pageTitle.innerText = "SAYFA: 0 / 0";
+                dateSpan.innerText = "--:--";
+                bodyDiv.innerText = "Henüz tamamlanmış bir yetenek ağacı turu yok.\n\nSonu (Dallanması) olmayan bir dilim tutturduğunuzda adımlarınız buraya basılacak!";
+                btnPrev.disabled = true;
+                btnNext.disabled = true;
+                return;
+            }
+
+            // Index sınır koruması
+            if (activePageIndex >= notebookPages.length) activePageIndex = notebookPages.length - 1;
+            if (activePageIndex < 0) activePageIndex = 0;
+
+            const page = notebookPages[activePageIndex];
+            pageTitle.innerText = `SAYFA: ${activePageIndex + 1} / ${notebookPages.length}`;
+            dateSpan.innerText = page.date;
+            bodyDiv.innerText = page.content;
+
+            btnPrev.disabled = (activePageIndex === 0);
+            btnNext.disabled = (activePageIndex === notebookPages.length - 1);
         }
 
         window.changeOptionColor = function(index, newColor) {
             appData[currentMain][currentSub][index].color = newColor;
-            saveToLocalStorage();
-            updateUI();
+            saveToLocalStorage(); drawWheel(0);
+        }
+
+        window.changeOptionLimit = function(index, newLimit) {
+            let val = parseInt(newLimit);
+            if (isNaN(val) || val < 0) val = 0;
+            appData[currentMain][currentSub][index].limit = val;
+            saveToLocalStorage(); updateUI();
+        }
+
+        window.changeOptionLink = function(index, targetSub) {
+            appData[currentMain][currentSub][index].nextSub = targetSub;
+            saveToLocalStorage(); updateUI();
+        }
+
+        window.deleteOption = function(index) {
+            appData[currentMain][currentSub].splice(index, 1);
+            saveToLocalStorage(); updateUI();
         }
 
         function drawWheel(currentAngle = 0) {
@@ -462,76 +648,49 @@
             const items = appData[currentMain][currentSub];
             if (items.length === 0) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = "#fff";
-                ctx.font = "16px sans-serif";
-                ctx.textAlign = "center";
-                ctx.fillText("Bu kategoriye henüz seçenek eklenmedi.", canvas.width/2, canvas.height/2);
+                ctx.fillStyle = "#fff"; ctx.font = "14px sans-serif"; ctx.textAlign = "center";
+                ctx.fillText("Bu alt çark boş. Seçenek ekleyin.", canvas.width/2, canvas.height/2);
                 return;
             }
 
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = canvas.width / 2 - 15;
-
+            const centerX = canvas.width / 2, centerY = canvas.height / 2, radius = canvas.width / 2 - 15;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             let startAngle = currentAngle;
             let totalInputPercent = items.reduce((sum, item) => sum + Number(item.percent), 0);
 
             items.forEach(item => {
                 let sliceAngle = (item.percent / totalInputPercent) * (2 * Math.PI);
-                
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
-                ctx.closePath();
-                
-                ctx.fillStyle = item.color;
-                ctx.fill();
-                ctx.strokeStyle = "#1e1e1e";
-                ctx.lineWidth = 2;
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle); ctx.closePath();
+                ctx.fillStyle = item.color; ctx.fill();
+                ctx.strokeStyle = "#1e1e1e"; ctx.lineWidth = 2; stroke();
 
-                ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate(startAngle + sliceAngle / 2);
-                ctx.fillStyle = "#121212"; 
-                ctx.font = "bold 13px sans-serif";
-                ctx.textAlign = "right";
+                ctx.save(); ctx.translate(centerX, centerY); ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.fillStyle = "#121212"; ctx.font = "bold 12px sans-serif"; ctx.textAlign = "right";
                 
-                let labelText = item.text;
-                if(item.limit <= 0) labelText += " (X)";
-                
-                ctx.fillText(labelText, radius - 25, 5);
-                ctx.restore();
+                let text = item.text;
+                if(item.limit <= 0) text += " (X)";
+                if(item.nextSub) text += " ➡️";
 
+                ctx.fillText(text, radius - 22, 4); ctx.restore();
                 startAngle += sliceAngle;
             });
 
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 25, 0, 2 * Math.PI);
-            ctx.fillStyle = "#1e1e1e";
-            ctx.fill();
-            ctx.strokeStyle = "#333";
-            ctx.stroke();
+            ctx.beginPath(); ctx.arc(centerX, centerY, 22, 0, 2 * Math.PI);
+            ctx.fillStyle = "#1e1e1e"; ctx.fill(); ctx.strokeStyle = "#333"; ctx.stroke();
         }
 
         function spin() {
             if (isSpinning) return;
             const items = appData[currentMain][currentSub];
-            if (!items || items.length === 0) return alert("Önce seçenek eklemelisiniz!");
+            if (!items || items.length === 0) return alert("Çarkta dönecek elaman yok!");
 
             let activeItems = items.filter(item => item.limit > 0);
-            if (activeItems.length === 0) {
-                return alert("Tüm seçeneklerin çıkma limiti doldu! Lütfen yeni seçenekler ekleyin veya limitleri güncelleyin.");
-            }
+            if (activeItems.length === 0) return alert("Bu çarktaki tüm limitler doldu!");
 
-            initAudio();
-            isSpinning = true;
-            
-            let start = performance.now();
-            let duration = 4000; 
-            let totalRotation = Math.random() * 25 + 25; 
-
+            initAudio(); isSpinning = true;
+            let start = performance.now(), duration = 3800;
+            let totalRotation = Math.random() * 20 + 25;
             let totalInputPercent = items.reduce((sum, item) => sum + Number(item.percent), 0);
             let lastSliceIndex = -1;
 
@@ -539,121 +698,153 @@
                 let elapsed = time - start;
                 let progress = Math.min(elapsed / duration, 1);
                 let easeOut = 1 - Math.pow(1 - progress, 4);
-                let angle = -(easeOut * totalRotation); 
+                let angle = -(easeOut * totalRotation);
 
                 drawWheel(angle);
 
-                let finalAngle = (angle % (2 * Math.PI));
-                let targetAngle = (-finalAngle + 2 * Math.PI) % (2 * Math.PI);
-                
-                let currentSum = 0;
-                let currentSliceIndex = 0;
+                let targetAngle = ((-angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+                let currentSum = 0, currentSliceIndex = 0;
+
                 for(let i=0; i<items.length; i++) {
                     let slice = (items[i].percent / totalInputPercent) * (2 * Math.PI);
                     if(targetAngle >= currentSum && targetAngle < currentSum + slice) {
-                        currentSliceIndex = i;
-                        break;
+                        currentSliceIndex = i; break;
                     }
                     currentSum += slice;
                 }
 
-                if (currentSliceIndex !== lastSliceIndex && progress < 0.98) {
-                    playTickSound();
-                    lastSliceIndex = currentSliceIndex;
+                if (currentSliceIndex !== lastSliceIndex && progress < 0.97) {
+                    playTickSound(); lastSliceIndex = currentSliceIndex;
                 }
 
                 if (progress < 1) {
                     requestAnimationFrame(animate);
                 } else {
                     isSpinning = false;
-                    
-                    let winnerIndex = currentSliceIndex;
-                    let winner = items[winnerIndex];
+                    let winner = items[currentSliceIndex];
 
-                    if (winner.limit <= 0) {
-                        for (let k = 0; k < items.length; k++) {
-                            let checkIndex = (winnerIndex + k) % items.length;
-                            if (items[checkIndex].limit > 0) {
-                                winnerIndex = checkIndex;
-                                winner = items[winnerIndex];
-                                break;
-                            }
-                        }
+                    winner.limit = Math.max(0, winner.limit - 1);
+                    
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    const dateStr = now.toLocaleDateString('tr-TR') + " " + timeStr.substring(0,5);
+                    
+                    let transitionMessage = "";
+                    let targetSubToGo = winner.nextSub;
+
+                    if(targetSubToGo && appData[currentMain][targetSubToGo]) {
+                        transitionMessage = `Yönlendirme: ${targetSubToGo}`;
                     }
 
-                    winner.limit -= 1;
+                    // Log ekle
+                    spinHistory.unshift({
+                        text: `${currentSub} -> ${winner.text}`,
+                        time: timeStr,
+                        color: winner.color,
+                        transition: transitionMessage
+                    });
+
+                    // Aktif tur hafızasına bu adımı kaydet
+                    currentTourSteps.push(`• [${currentSub}] aşamasından gelen sonuç: ${winner.text}`);
+
                     saveToLocalStorage();
-                    
                     playWinSound();
 
                     setTimeout(() => {
-                        alert(`🎉 Kazanan: ${winner.text} !\n(Kalan Hak: ${winner.limit})`);
-                        updateUI();
-                    }, 100);
+                        if(targetSubToGo && appData[currentMain][targetSubToGo]) {
+                            alert(`🎉 Çıkan Sonuç: ${winner.text}!\n\n🔀 Yolculuk Devam Ediyor: "${targetSubToGo}" çarkına aktarılıyorsunuz.`);
+                            currentSub = targetSubToGo; 
+                            saveToLocalStorage();
+                            updateUI();
+                        } else {
+                            // YAPININ SONUNA GELİNDİ (Dallanma yoksa ağaç bitti!)
+                            let notebookText = `[AĞAÇ: ${currentMain}]\n--------------------\n` + currentTourSteps.join("\n") + `\n--------------------\n🏆 TUR SONU BAŞARISI!`;
+                            
+                            // Sayfa olarak deftere ekle
+                            notebookPages.push({
+                                date: dateStr,
+                                content: notebookText
+                            });
+                            
+                            // Not defterini yeni sayfaya odakla
+                            activePageIndex = notebookPages.length - 1;
+                            
+                            alert(`🎉 Final Sonucu: ${winner.text}!\n\n📒 Bir yetenek ağacı dalı sonlandı! Bu turun hikayesi Not Defteri Sayfa ${notebookPages.length}'e başarıyla kaydedildi.`);
+                            
+                            // Tur bittiği için geçici tur hafızasını temizle
+                            currentTourSteps = [];
+                            
+                            // İsteğe bağlı: Kullanıcıyı yeniden başlangıç çarkına fırlatabilirsiniz.
+                            // Biz burada kalıp son durumu inceleyebilmesi için çarkı sıfırlamıyoruz.
+                            saveToLocalStorage();
+                            updateUI();
+                        }
+                    }, 150);
                 }
             }
             requestAnimationFrame(animate);
         }
 
+        // Event Listeners
         document.getElementById('main-category-select').addEventListener('change', (e) => {
             currentMain = e.target.value;
-            currentSub = Object.keys(appData[currentMain])[0] || "";
-            updateUI();
+            currentSub = Object.keys(appData[currentMain])[0] || ""; 
+            currentTourSteps = []; // Ağaç kökten değişirse turu temizle
+            saveToLocalStorage(); updateUI();
         });
-
         document.getElementById('sub-category-select').addEventListener('change', (e) => {
-            currentSub = e.target.value;
-            updateUI();
+            currentSub = e.target.value; updateUI();
         });
-
         document.getElementById('add-main-btn').addEventListener('click', () => {
             let name = document.getElementById('new-main-input').value.trim();
             if(name && !appData[name]) {
-                appData[name] = {};
-                currentMain = name;
-                currentSub = "";
-                document.getElementById('new-main-input').value = "";
-                saveToLocalStorage();
-                updateUI();
+                appData[name] = {}; currentMain = name; currentSub = "";
+                currentTourSteps = [];
+                document.getElementById('new-main-input').value = ""; saveToLocalStorage(); updateUI();
             }
         });
-
         document.getElementById('add-sub-btn').addEventListener('click', () => {
             let name = document.getElementById('new-sub-input').value.trim();
-            if(name && currentMain) {
-                if(!appData[currentMain][name]) {
-                    appData[currentMain][name] = [];
-                    currentSub = name;
-                    document.getElementById('new-sub-input').value = "";
-                    saveToLocalStorage();
-                    updateUI();
-                }
+            if(name && currentMain && !appData[currentMain][name]) {
+                appData[currentMain][name] = []; currentSub = name;
+                document.getElementById('new-sub-input').value = ""; saveToLocalStorage(); updateUI();
             }
         });
-
         document.getElementById('add-option-btn').addEventListener('click', () => {
             let text = document.getElementById('option-text-input').value.trim();
             let percent = parseInt(document.getElementById('option-percent-input').value);
             let limit = parseInt(document.getElementById('option-limit-input').value);
-            let chosenColor = document.getElementById('option-color-input').value;
+            let color = document.getElementById('option-color-input').value;
 
-            if(!currentMain || !currentSub) return alert("Lütfen önce bir kategori seçin veya oluşturun!");
-            if(!text || isNaN(percent) || percent <= 0 || isNaN(limit) || limit <= 0) return alert("Geçerli isim, yüzde ve limit girin!");
+            if(!currentMain || !currentSub) return alert("Önce çark seçin!");
+            if(!text || isNaN(percent) || percent <= 0) return alert("Geçersiz giriş!");
 
-            appData[currentMain][currentSub].push({ text: text, percent: percent, limit: limit, color: chosenColor });
-
+            appData[currentMain][currentSub].push({ text, percent, limit, color, nextSub: "" });
             document.getElementById('option-text-input').value = "";
             document.getElementById('option-percent-input').value = "";
             document.getElementById('option-limit-input').value = "1";
-            saveToLocalStorage();
-            updateUI();
+            saveToLocalStorage(); updateUI();
+        });
+        document.getElementById('clear-history-btn').addEventListener('click', () => {
+            if(confirm("Geçmiş sıfırlansın mı?")) { spinHistory = []; saveToLocalStorage(); updateHistoryUI(); }
         });
 
-        window.deleteOption = function(index) {
-            appData[currentMain][currentSub].splice(index, 1);
-            saveToLocalStorage();
-            updateUI();
-        }
+        // NOT DEFTERİ BUTON KONTROLLERİ
+        document.getElementById('btn-prev-page').addEventListener('click', () => {
+            if (activePageIndex > 0) { activePageIndex--; updateNotebookUI(); }
+        });
+        document.getElementById('btn-next-page').addEventListener('click', () => {
+            if (activePageIndex < notebookPages.length - 1) { activePageIndex++; updateNotebookUI(); }
+        });
+        document.getElementById('btn-clear-notebook').addEventListener('click', () => {
+            if(confirm("Not defterindeki tüm sayfaları silmek ve defteri sıfırlamak istediğinize emin misiniz?")) {
+                notebookPages = [];
+                activePageIndex = 0;
+                currentTourSteps = [];
+                saveToLocalStorage();
+                updateNotebookUI();
+            }
+        });
 
         document.getElementById('spin-btn').addEventListener('click', spin);
 
