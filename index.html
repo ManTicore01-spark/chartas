@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Ultimate RPG Karakter Motoru v4.0</title>
+    <title>Monster Soul Character Generator v5.1</title>
     <style>
         body { background: #121212; color: #eee; font-family: 'Courier New', Courier, monospace; display: flex; padding: 20px; margin: 0; }
         .left-panel { flex: 1; display: flex; flex-direction: column; align-items: center; }
@@ -22,8 +22,9 @@
 
         .dev-panel { margin-top: 20px; padding: 15px; background: #2a2a2a; border-radius: 8px; width: 100%; max-width: 500px; border: 1px solid #444; }
         .dev-panel input, .dev-panel select { width: 100%; padding: 8px; margin-bottom: 10px; background: #111; color: #fff; border: 1px solid #555; box-sizing: border-box; }
-        .dev-row { display: flex; gap: 10px; }
-        .dev-row button { flex: 1; font-size: 14px; padding: 8px; cursor: pointer; }
+        .dev-row { display: flex; gap: 5px; margin-bottom: 5px; }
+        .dev-row label { font-size: 11px; color: #aaa; width: 100%; display: block; }
+        .dev-row button { flex: 1; font-size: 13px; padding: 8px; cursor: pointer; border: none; border-radius: 3px; font-weight: bold; }
         
         .history-select { width: 100%; padding: 10px; background: #111; color: #ffcc00; border: 1px solid #555; font-weight: bold; margin-bottom: 15px; cursor: pointer; }
         .char-name-input { width: 100%; padding: 12px; background: #222; color: #fff; border: 1px solid #ffcc00; font-size: 18px; font-weight: bold; margin-bottom: 10px; box-sizing: border-box; text-align: center; }
@@ -46,16 +47,33 @@
     <button id="newCharBtn" class="main-btn" onclick="startNewCharacter()">✨ Yeni Karakter Yarat</button>
 
     <div class="dev-panel">
-        <h3 style="margin-top:0; color:#00ffcc;">⚙️ Geliştirici Paneli</h3>
+        <h3 style="margin-top:0; color:#00ffcc;">⚙️ Geliştirici Gelişmiş Yönetim Paneli</h3>
         <select id="catSelect" onchange="updateDevUI()"></select>
+        
         <div class="dev-row">
-            <input type="text" id="optName" placeholder="Seçenek Adı">
-            <input type="number" id="optProb" placeholder="İhtimal (Örn: 30)">
-            <input type="number" id="optLimit" placeholder="Max Çıkma Sayısı (Örn: 1)">
+            <div>
+                <label>Seçenek Adı (Aynıysa Günceller)</label>
+                <input type="text" id="optName" placeholder="Seçenek Adı">
+            </div>
         </div>
         <div class="dev-row">
-            <button onclick="addOption()" style="background: #4CAF50; color:white; border:none; border-radius:3px;">Ekle / Güncelle</button>
-            <button onclick="deleteOption()" style="background: #f44336; color:white; border:none; border-radius:3px;">Seçiliyi Sil</button>
+            <div>
+                <label>Yüzde İhtimali</label>
+                <input type="number" id="optProb" placeholder="İhtimal (Örn: 40)">
+            </div>
+            <div>
+                <label>Max Çıkma Limiti</label>
+                <input type="number" id="optLimit" placeholder="Limit (Örn: 2)">
+            </div>
+            <div>
+                <label>Mevcut Çıkma Sayısı</label>
+                <input type="number" id="optCount" placeholder="Çıkma Sayısı (Örn: 0)">
+            </div>
+        </div>
+        
+        <div class="dev-row" style="margin-top: 10px;">
+            <button onclick="addOption()" style="background: #4CAF50; color:white;">Ekle / Güncelle</button>
+            <button onclick="deleteOption()" style="background: #f44336; color:white;">Seçiliyi Sil</button>
         </div>
     </div>
 </div>
@@ -73,37 +91,54 @@
 </div>
 
 <script>
+    // Yaş çarkı en sona eklendi
     const flow = [
-        "Mitoloji", "1. Canavar", "Ruh Yüzdesi", "2. Mitoloji", "2. Canavar", 
-        "1. Yetenek Sayısı", "1. Yetenek", "2. Yetenek Sayısı", "2. Yetenek", 
-        "Yaş", "Benzeme Yüzdesi", "Benzeyen Yerler", "Cinsiyet", "Göz Rengi", 
-        "Saç Rengi", "Ten Rengi", "Boy", "Kilo", "Dayanıklılık", "Hız", 
-        "Zihin Gücü", "Zeka", "Güç", "Ülke Konumu", "Vatandaşlık", "Kişilik"
+        "1. Canavar Ruhu", 
+        "İlk Canavar Yüzdesi", 
+        "2. Canavar Ruhu", 
+        "Yetenek Sayısı", 
+        "Zihin Gücü", 
+        "Güç", 
+        "Dayanıklılık", 
+        "Zeka", 
+        "Hız", 
+        "Fiziksel Benzeme Yüzdesi", 
+        "Fiziksel Değişimler", 
+        "Göz Rengi", 
+        "Saç Rengi", 
+        "Boy", 
+        "Kilo", 
+        "Karakter Sınıfı/Kişilik", 
+        "Ülke", 
+        "Ülkedeki Konumu",
+        "Yaş"
     ];
 
-    let DB = JSON.parse(localStorage.getItem("masterRpgDB")) || {};
-    let charHistory = JSON.parse(localStorage.getItem("masterRpgHistory")) || [];
+    let DB = JSON.parse(localStorage.getItem("masterMonsterDB")) || {};
+    let charHistory = JSON.parse(localStorage.getItem("masterMonsterHistory")) || [];
     
+    // Varsayılan veritabanı kurulumu
     flow.forEach(step => {
         if (!DB[step]) {
             DB[step] = {
-                colorBase: { r: Math.floor(Math.random()*100), g: Math.floor(Math.random()*100), b: Math.floor(Math.random()*100) },
+                colorBase: { r: Math.floor(Math.random()*120), g: Math.floor(Math.random()*120), b: Math.floor(Math.random()*120) },
                 options: [
-                    { name: "Seçenek 1", prob: 50, limit: 1, count: 0 },
-                    { name: "Seçenek 2", prob: 50, limit: 1, count: 0 }
+                    { name: "Seçenek A", prob: 50, limit: 1, count: 0 },
+                    { name: "Seçenek B", prob: 50, limit: 1, count: 0 }
                 ]
             };
-            if(step === "Ruh Yüzdesi" || step === "Benzeme Yüzdesi") DB[step].options = [{name: "100", prob: 30, limit: 99, count:0}, {name: "50", prob: 70, limit: 99, count:0}];
-            if(step === "Yaş") DB[step].options = [{name: "25", prob: 50, limit: 99, count:0}, {name: "40", prob: 50, limit: 99, count:0}];
-            if(step.includes("Yetenek Sayısı")) DB[step].options = [{name: "1", prob: 50, limit: 99, count:0}, {name: "3", prob: 50, limit: 99, count:0}];
+            if(step === "İlk Canavar Yüzdesi") DB[step].options = [{name: "%100", prob: 20, limit: 99, count:0}, {name: "%70", prob: 40, limit: 99, count:0}, {name: "%50", prob: 40, limit: 99, count:0}];
+            if(step === "Fiziksel Benzeme Yüzdesi") DB[step].options = [{name: "%100", prob: 10, limit: 99, count:0}, {name: "%30", prob: 40, limit: 99, count:0}, {name: "%10", prob: 50, limit: 99, count:0}];
+            if(step === "Yetenek Sayısı") DB[step].options = [{name: "1", prob: 60, limit: 99, count:0}, {name: "3", prob: 40, limit: 99, count:0}];
+            if(step === "Yaş") DB[step].options = [{name: "18-25", prob: 40, limit: 99, count:0}, {name: "26-40", prob: 40, limit: 99, count:0}, {name: "40+", prob: 20, limit: 99, count:0}];
         }
     });
 
     let state = {
         stepIdx: 0,
         rotation: 0,
-        spinsLeft: 1, // Çoklu çevirme hakkı
-        vars: { ruhYuzdesi: 0, yas: 0, benzemeYuzdesi: 0 },
+        spinsLeft: 1, 
+        vars: { ilkYuzde: 0, benzemeYuzdesi: 0 },
         draftLog: "",
         charName: ""
     };
@@ -123,7 +158,7 @@
 
         data.options.forEach((opt, i) => {
             const sliceAngle = (opt.prob / totalProb) * 2 * Math.PI;
-            const shade = i * (150 / data.options.length);
+            const shade = i * (140 / data.options.length);
             const r = Math.min(255, data.colorBase.r + shade);
             const g = Math.min(255, data.colorBase.g + shade);
             const b = Math.min(255, data.colorBase.b + shade);
@@ -159,7 +194,7 @@
         const data = DB[stepName];
         const validOptions = data.options.filter(o => o.count < o.limit);
         
-        if(validOptions.length === 0) return alert("Bu çarktaki tüm seçeneklerin limiti doldu!");
+        if(validOptions.length === 0) return alert("Bu çarktaki tüm seçeneklerin limiti dolmuş durumda!");
 
         document.getElementById("spinBtn").disabled = true;
 
@@ -188,32 +223,37 @@
     function processResult(result, stepName) {
         logToNotebook(stepName, result);
         
-        // Gelişmiş Rakam Çıkarıcı (Seçeneğe "3 Tane", "%50" vb. yazılsa bile sadece rakamı alır)
         const getNum = (str) => {
             const match = String(str).match(/\d+/);
             return match ? parseInt(match[0]) : 0;
         };
         
-        if (stepName === "Ruh Yüzdesi") state.vars.ruhYuzdesi = getNum(result);
-        if (stepName === "Yaş") state.vars.yas = getNum(result);
-        if (stepName === "Benzeme Yüzdesi") state.vars.benzemeYuzdesi = getNum(result);
+        if (stepName === "İlk Canavar Yüzdesi") state.vars.ilkYuzde = getNum(result);
         
-        // ÇIKAN RAKAMI SPINSLEFT'E KAYDETME
-        if (stepName === "1. Yetenek Sayısı" || stepName === "2. Yetenek Sayısı") {
+        if (stepName === "Yetenek Sayısı") {
             let num = getNum(result);
-            state.spinsLeft = num > 0 ? num : 1; 
+            state.spinsLeft = num > 0 ? num : 1;
         }
 
-        // ÇOKLU ÇEVİRME KONTROLÜ
-        if ((stepName === "1. Yetenek" || stepName === "2. Yetenek") && state.spinsLeft > 1) {
+        if (stepName === "Fiziksel Benzeme Yüzdesi") {
+            state.vars.benzemeYuzdesi = getNum(result);
+            if(state.vars.benzemeYuzdesi === 100) {
+                state.spinsLeft = 0; 
+            } else {
+                state.spinsLeft = Math.floor(state.vars.benzemeYuzdesi / 10);
+                if(state.spinsLeft <= 0) state.spinsLeft = 1; 
+            }
+        }
+
+        if (stepName === "Fiziksel Değişimler" && state.spinsLeft > 1) {
             state.spinsLeft--;
             document.getElementById("stepTitle").innerText = `${stepName} (Kalan Seçim: ${state.spinsLeft})`;
             document.getElementById("spinBtn").disabled = false;
             drawWheel();
-            return; // Çarkta kal ve işlemi bitir (bir sonraki adıma geçmez)
+            return;
         }
 
-        state.spinsLeft = 1;
+        state.spinsLeft = 1; 
         determineNextStep();
     }
 
@@ -221,13 +261,13 @@
         state.stepIdx++;
         
         if (state.stepIdx >= flow.length) {
-            document.getElementById("stepTitle").innerText = "🎉 Karakter Tamamlandı!";
+            document.getElementById("stepTitle").innerText = "🎉 Karakter Kaydedildi!";
             document.getElementById("spinBtn").style.display = "none";
             document.getElementById("newCharBtn").style.display = "block";
             
             if(state.draftLog.trim() !== "") {
                 const dateStr = new Date().toLocaleString('tr-TR');
-                const finalName = state.charName.trim() !== "" ? state.charName : "İsimsiz Karakter";
+                const finalName = state.charName.trim() !== "" ? state.charName : "Yeni Canavar Melezi";
                 charHistory.push({ name: finalName, date: dateStr, log: state.draftLog });
                 saveHistory();
                 updateHistoryDropdown();
@@ -240,9 +280,8 @@
         const next = flow[state.stepIdx];
         let skip = false;
         
-        if ((next === "2. Mitoloji" || next === "2. Canavar" || next === "2. Yetenek Sayısı" || next === "2. Yetenek") && state.vars.ruhYuzdesi === 100) skip = true;
-        if (next === "Benzeme Yüzdesi" && state.vars.yas >= 30) skip = true;
-        if (next === "Benzeyen Yerler" && (state.vars.benzemeYuzdesi === 100 || state.vars.yas >= 30)) skip = true;
+        if (next === "2. Canavar Ruhu" && state.vars.ilkYuzde === 100) skip = true;
+        if (next === "Fiziksel Değişimler" && state.vars.benzemeYuzdesi === 100) skip = true;
 
         if (skip) determineNextStep(); 
         else initStep();
@@ -250,11 +289,10 @@
 
     function initStep() {
         const stepName = flow[state.stepIdx];
-        
-        // EĞER ÇOKLU SEÇİM ESNASINDAYSAN BAŞLIKTA BELİRT
         let titleText = stepName;
-        if ((stepName === "1. Yetenek" || stepName === "2. Yetenek") && state.spinsLeft > 1) {
-            titleText = `${stepName} (Kalan Seçim: ${state.spinsLeft})`;
+        
+        if (stepName === "Fiziksel Değişimler" && state.spinsLeft > 1) {
+            titleText = `${stepName} (Kalan Değişim: ${state.spinsLeft})`;
         }
         
         document.getElementById("stepTitle").innerText = titleText;
@@ -264,7 +302,54 @@
         drawWheel();
     }
 
-    // --- ARAYÜZ VE SİSTEM FONKSİYONLARI ---
+    function initDevPanel() {
+        const select = document.getElementById("catSelect");
+        flow.forEach(step => {
+            const opt = document.createElement("option");
+            opt.value = step;
+            opt.innerText = step;
+            select.appendChild(opt);
+        });
+    }
+
+    function updateDevUI() {
+        document.getElementById("optName").value = "";
+        document.getElementById("optProb").value = "";
+        document.getElementById("optLimit").value = "";
+        document.getElementById("optCount").value = ""; 
+    }
+
+    function addOption() {
+        const stepName = document.getElementById("catSelect").value;
+        const name = document.getElementById("optName").value;
+        const prob = parseInt(document.getElementById("optProb").value) || 10;
+        const limit = parseInt(document.getElementById("optLimit").value) || 1;
+        const count = parseInt(document.getElementById("optCount").value) || 0; 
+
+        if(!name) return alert("Lütfen bir seçenek adı belirtin!");
+
+        const existing = DB[stepName].options.find(o => o.name === name);
+        if(existing) {
+            existing.prob = prob;
+            existing.limit = limit;
+            existing.count = count; 
+        } else {
+            DB[stepName].options.push({ name, prob, limit, count: count });
+        }
+        
+        saveDB();
+        if(stepName === flow[state.stepIdx]) drawWheel();
+        alert("Çark seçeneği güncellendi/eklendi!");
+    }
+
+    function deleteOption() {
+        const stepName = document.getElementById("catSelect").value;
+        const name = document.getElementById("optName").value;
+        DB[stepName].options = DB[stepName].options.filter(o => o.name !== name);
+        saveDB();
+        if(stepName === flow[state.stepIdx]) drawWheel();
+        alert("Seçenek silindi.");
+    }
 
     function handleNameEdit() {
         const val = document.getElementById("historySelect").value;
@@ -280,11 +365,12 @@
         else { charHistory[val].log = newLog; saveHistory(); }
     }
 
-    function saveHistory() { localStorage.setItem("masterRpgHistory", JSON.stringify(charHistory)); }
+    function saveHistory() { localStorage.setItem("masterMonsterHistory", JSON.stringify(charHistory)); }
+    function saveDB() { localStorage.setItem("masterMonsterDB", JSON.stringify(DB)); }
 
     function startNewCharacter() {
         state.stepIdx = 0; state.rotation = 0; state.spinsLeft = 1;
-        state.vars = { ruhYuzdesi: 0, yas: 0, benzemeYuzdesi: 0 };
+        state.vars = { ilkYuzde: 0, benzemeYuzdesi: 0 };
         state.draftLog = ""; state.charName = "";
         
         document.getElementById("historySelect").value = "current";
@@ -325,47 +411,6 @@
         else { nb.innerHTML = charHistory[val].log; nameInput.value = charHistory[val].name || ""; }
         nb.scrollTop = nb.scrollHeight;
     }
-
-    function initDevPanel() {
-        const select = document.getElementById("catSelect");
-        flow.forEach(step => {
-            const opt = document.createElement("option");
-            opt.value = step;
-            opt.innerText = step;
-            select.appendChild(opt);
-        });
-    }
-
-    function updateDevUI() {
-        document.getElementById("optName").value = "";
-        document.getElementById("optProb").value = "";
-        document.getElementById("optLimit").value = "";
-    }
-
-    function addOption() {
-        const stepName = document.getElementById("catSelect").value;
-        const name = document.getElementById("optName").value;
-        const prob = parseInt(document.getElementById("optProb").value) || 10;
-        const limit = parseInt(document.getElementById("optLimit").value) || 1;
-        if(!name) return alert("İsim giriniz!");
-
-        const existing = DB[stepName].options.find(o => o.name === name);
-        if(existing) { existing.prob = prob; existing.limit = limit; } 
-        else { DB[stepName].options.push({ name, prob, limit, count: 0 }); }
-        
-        saveDB();
-        if(stepName === flow[state.stepIdx]) drawWheel();
-    }
-
-    function deleteOption() {
-        const stepName = document.getElementById("catSelect").value;
-        const name = document.getElementById("optName").value;
-        DB[stepName].options = DB[stepName].options.filter(o => o.name !== name);
-        saveDB();
-        if(stepName === flow[state.stepIdx]) drawWheel();
-    }
-
-    function saveDB() { localStorage.setItem("masterRpgDB", JSON.stringify(DB)); }
 
     initDevPanel();
     updateHistoryDropdown();
